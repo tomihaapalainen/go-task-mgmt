@@ -8,9 +8,12 @@ import (
 	"log"
 	"net/http"
 	"net/mail"
+	"os"
 	"strings"
+	"time"
 	"unicode"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/mattn/go-sqlite3"
 	"github.com/tomihaapalainen/go-task-mgmt/model"
@@ -105,5 +108,55 @@ func HandlePostRegister(db *sql.DB) echo.HandlerFunc {
 			http.StatusOK,
 			schema.UserOut{ID: user.ID, Email: user.Email, RoleID: user.RoleID},
 		)
+	})
+}
+
+func HandlePostLogIn(db *sql.DB) echo.HandlerFunc {
+	return echo.HandlerFunc(func(c echo.Context) error {
+		userIn := schema.UserIn{}
+		if err := json.NewDecoder(c.Request().Body).Decode(&userIn); err != nil {
+			log.Println("err decoding request body: ", err)
+			return c.JSON(
+				http.StatusBadRequest,
+				schema.ErrorResponse{
+					Message: "Invalid request data",
+				},
+			)
+		}
+
+		user := model.User{Email: userIn.Email}
+		if err := user.ReadByEmail(db); err != nil {
+			log.Println("err reading user by email: ", err)
+			return c.JSON(
+				http.StatusBadRequest,
+				schema.ErrorResponse{
+					Message: fmt.Sprintf("error reading user by email '%s'", user.Email),
+				},
+			)
+		}
+
+		userOut := schema.UserOut{ID: user.ID, Email: user.Email, RoleID: user.RoleID}
+
+		exp := time.Now().Add(time.Hour * 24).Unix()
+		token := jwt.NewWithClaims(
+			jwt.SigningMethodHS256,
+			jwt.MapClaims{
+				"user": userOut,
+				"exp":  exp,
+			},
+		)
+
+		tokenString, err := token.SignedString([]byte(os.Getenv("GO_TASK_MGMT_SIGNING_SECRET")))
+		if err != nil {
+			log.Println("err signing token ", err)
+			return c.JSON(
+				http.StatusInternalServerError,
+				schema.ErrorResponse{Message: "Error signing JWT token"},
+			)
+		}
+
+		r := schema.AuthResponse{AccessToken: tokenString, TokenType: "Bearer", Expires: exp}
+
+		return c.JSON(http.StatusOK, r)
 	})
 }

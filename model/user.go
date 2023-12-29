@@ -20,3 +20,17 @@ func (u *User) Create(db *sql.DB) error {
 	}
 	return stmt.QueryRow(u.Email, u.PasswordHash, u.RoleID).Scan(&u.ID)
 }
+
+func (u *User) ReadByEmail(db *sql.DB) error {
+	stmt, err := db.Prepare(
+		`
+		SELECT id, password_hash, role_id
+		FROM user
+		WHERE email = $1
+		`,
+	)
+	if err != nil {
+		return err
+	}
+	return stmt.QueryRow(u.Email).Scan(&u.ID, &u.PasswordHash, &u.RoleID)
+}

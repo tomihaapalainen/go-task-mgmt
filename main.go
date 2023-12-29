@@ -7,12 +7,15 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/tomihaapalainen/go-task-mgmt/config"
+	"github.com/tomihaapalainen/go-task-mgmt/dotenv"
 	"github.com/tomihaapalainen/go-task-mgmt/handler"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
+	dotenv.ParseDotenv(".env")
+
 	env := flag.String("env", "dev", "run environment dev|test|prod")
 	port := flag.String("port", ":8080", "application port, e.g. ':8080'")
 	if env == nil {
@@ -34,6 +37,7 @@ func main() {
 
 	authGroup := e.Group("/auth")
 	authGroup.POST("/register", handler.HandlePostRegister(db))
+	authGroup.POST("/login", handler.HandlePostLogIn(db))
 
 	e.Start(config.PORT)
 }
