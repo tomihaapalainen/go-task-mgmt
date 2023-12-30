@@ -1,16 +1,5 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE IF NOT EXISTS user (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT,
-    password_hash TEXT,
-    role_id INTEGER,
-    FOREIGN KEY (role_id) REFERENCES role(id),
-    UNIQUE (email)
-);
-
-CREATE INDEX IF NOT EXISTS user_email_ix ON user (email);
-
 CREATE TABLE IF NOT EXISTS role (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT
@@ -60,6 +49,17 @@ INSERT INTO role_permission (role_id, permission_id) values(3, 7);
 INSERT INTO role_permission (role_id, permission_id) values(3, 8);
 INSERT INTO role_permission (role_id, permission_id) values(3, 9);
 
+CREATE TABLE IF NOT EXISTS user (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT,
+    password_hash TEXT,
+    role_id INTEGER,
+    FOREIGN KEY (role_id) REFERENCES role(id),
+    UNIQUE (email)
+);
+
+CREATE INDEX IF NOT EXISTS user_email_ix ON user (email);
+
 CREATE TABLE IF NOT EXISTS project (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
@@ -83,15 +83,16 @@ CREATE TABLE IF NOT EXISTS task (
     FOREIGN KEY (assignee_id) REFERENCES user(id),
     FOREIGN KEY (creator_id) REFERENCES user(id)
 );
-
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
 DROP TABLE task;
+DROP INDEX project_name_ix;
 DROP TABLE project;
+DROP INDEX user_email_ix;
+DROP TABLE user;
 DROP TABLE role_permission;
 DROP TABLE permission;
 DROP TABLE role;
-DROP TABLE user;
 -- +goose StatementEnd

@@ -3,10 +3,10 @@ package model
 import "database/sql"
 
 type User struct {
-	ID           int
-	Email        string
-	PasswordHash string
-	RoleID       int
+	ID           int    `json:"id"`
+	Email        string `json:"email"`
+	PasswordHash string `json:"-"`
+	RoleID       int    `json:"role_id"`
 }
 
 func (u *User) Create(db *sql.DB) error {

@@ -9,6 +9,7 @@ import (
 	"github.com/tomihaapalainen/go-task-mgmt/config"
 	"github.com/tomihaapalainen/go-task-mgmt/dotenv"
 	"github.com/tomihaapalainen/go-task-mgmt/handler"
+	"github.com/tomihaapalainen/go-task-mgmt/mw"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -38,6 +39,9 @@ func main() {
 	authGroup := e.Group("/auth")
 	authGroup.POST("/register", handler.HandlePostRegister(db))
 	authGroup.POST("/login", handler.HandlePostLogIn(db))
+
+	projectGroup := e.Group("/project", mw.JwtMiddleware)
+	projectGroup.POST("/create", handler.HandlePostCreateProject(db), mw.PermissionRequired(db, "create project"))
 
 	e.Start(config.PORT)
 }

@@ -2,37 +2,16 @@ package handler
 
 import (
 	"bytes"
-	"database/sql"
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/labstack/echo/v4"
-	"github.com/pressly/goose"
 	"github.com/tomihaapalainen/go-task-mgmt/assert"
-	"github.com/tomihaapalainen/go-task-mgmt/dotenv"
+	"github.com/tomihaapalainen/go-task-mgmt/model"
 	"github.com/tomihaapalainen/go-task-mgmt/schema"
 )
-
-var tDB *sql.DB
-
-func TestMain(m *testing.M) {
-	dotenv.ParseDotenv("../.env")
-	tDB, _ = sql.Open("sqlite3", "file:.///db.sqlite3?_fk=ON")
-
-	if err := goose.SetDialect("sqlite3"); err != nil {
-		log.Fatal("err setting dialect: ", err)
-	}
-	if err := goose.Up(tDB, "../migrations"); err != nil {
-		log.Fatal("err running migrations: ", err)
-	}
-	code := m.Run()
-	os.Remove("db.sqlite3")
-	os.Exit(code)
-}
 
 func TestPostRegisterUserShouldPass(t *testing.T) {
 	jsonStr := `{"email": "test@example.com", "password": "Testpassword1"}`
@@ -43,7 +22,7 @@ func TestPostRegisterUserShouldPass(t *testing.T) {
 	assert.AssertEq(t, err, nil)
 
 	assert.AssertEq(t, rec.Code, http.StatusOK)
-	u := schema.UserOut{}
+	u := model.User{}
 	err = json.NewDecoder(rec.Body).Decode(&u)
 	assert.AssertEq(t, err, nil)
 	assert.AssertNotEq(t, u.ID, 0)

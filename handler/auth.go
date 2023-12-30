@@ -106,7 +106,7 @@ func HandlePostRegister(db *sql.DB) echo.HandlerFunc {
 
 		return c.JSON(
 			http.StatusOK,
-			schema.UserOut{ID: user.ID, Email: user.Email, RoleID: user.RoleID},
+			model.User{ID: user.ID, Email: user.Email, RoleID: user.RoleID},
 		)
 	})
 }
@@ -135,14 +135,17 @@ func HandlePostLogIn(db *sql.DB) echo.HandlerFunc {
 			)
 		}
 
-		userOut := schema.UserOut{ID: user.ID, Email: user.Email, RoleID: user.RoleID}
-
 		exp := time.Now().Add(time.Hour * 24).Unix()
+		b, err := json.Marshal(user)
+		if err != nil {
+			log.Println("err marshaling user: ", err)
+			return errors.New("internal server error")
+		}
 		token := jwt.NewWithClaims(
 			jwt.SigningMethodHS256,
 			jwt.MapClaims{
-				"user": userOut,
 				"exp":  exp,
+				"data": string(b),
 			},
 		)
 
