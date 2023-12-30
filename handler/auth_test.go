@@ -12,6 +12,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/pressly/goose"
+	"github.com/tomihaapalainen/go-task-mgmt/assert"
 	"github.com/tomihaapalainen/go-task-mgmt/dotenv"
 	"github.com/tomihaapalainen/go-task-mgmt/schema"
 )
@@ -35,238 +36,149 @@ func TestMain(m *testing.M) {
 
 func TestPostRegisterUserShouldPass(t *testing.T) {
 	jsonStr := `{"email": "test@example.com", "password": "Testpassword1"}`
-	req := httptest.NewRequest("POST", "http://localhost:8080/auth/register", bytes.NewBuffer([]byte(jsonStr)))
-	req.Header.Set("Content-Type", "application/json")
 
-	rec := httptest.NewRecorder()
-	e := echo.New()
-	c := e.NewContext(req, rec)
+	rec, c := createContext("POST", "http://localhost:8080/auth/register", jsonStr)
 
 	err := HandlePostRegister(tDB)(c)
-	if err != nil {
-		t.Fatalf("register failed: %+v\n", err)
-	}
+	assert.AssertEq(t, err, nil)
 
-	if rec.Code != http.StatusOK {
-		t.Fatalf("status code - expected %d - was %d - body: %s\n", http.StatusOK, rec.Code, rec.Body)
-	}
+	assert.AssertEq(t, rec.Code, http.StatusOK)
 	u := schema.UserOut{}
-	if err := json.NewDecoder(rec.Body).Decode(&u); err != nil {
-		t.Fatal("err decoding response body: ", err)
-	}
-	if u.ID <= 0 {
-		t.Fatalf("invalid user ID %d\n", u.ID)
-	}
-	if u.RoleID != 1 {
-		t.Fatalf("role id - expected %d - was %d\n", 1, u.RoleID)
-	}
-	if u.Email != "test@example.com" {
-		t.Fatalf("email - expected 'test@example.com' - was '%s'\n", u.Email)
-	}
+	err = json.NewDecoder(rec.Body).Decode(&u)
+	assert.AssertEq(t, err, nil)
+	assert.AssertNotEq(t, u.ID, 0)
+	assert.AssertEq(t, u.RoleID, 1)
+	assert.AssertEq(t, u.Email, "test@example.com")
 }
 
 func TestPostRegisterUserWithoutEmailShouldFail(t *testing.T) {
 	jsonStr := `{"password": "testpassword"}`
-	req := httptest.NewRequest("POST", "http://localhost:8080/auth/register", bytes.NewBuffer([]byte(jsonStr)))
-	req.Header.Set("Content-Type", "application/json")
 
-	rec := httptest.NewRecorder()
-	e := echo.New()
-	c := e.NewContext(req, rec)
+	rec, c := createContext("POST", "http://localhost:8080/auth/register", jsonStr)
 
 	err := HandlePostRegister(tDB)(c)
-	if err != nil {
-		t.Fatalf("err handling post register: %+v", err)
-	}
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("status code - expected %d - was %d", http.StatusBadRequest, rec.Code)
-	}
+	assert.AssertEq(t, err, nil)
+	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
 	res := schema.ErrorResponse{}
-	if err := json.NewDecoder(rec.Body).Decode(&res); err != nil {
-		t.Fatal("err decoding response: ", err)
-	}
+	err = json.NewDecoder(rec.Body).Decode(&res)
+	assert.AssertEq(t, err, nil)
 }
 
 func TestPostRegisterUserWithEmptyEmailShouldFail(t *testing.T) {
 	jsonStr := `{"email": "", "password": "testpassword"}`
-	req := httptest.NewRequest("POST", "http://localhost:8080/auth/register", bytes.NewBuffer([]byte(jsonStr)))
-	req.Header.Set("Content-Type", "application/json")
 
-	rec := httptest.NewRecorder()
-	e := echo.New()
-	c := e.NewContext(req, rec)
+	rec, c := createContext("POST", "http://localhost:8080/auth/register", jsonStr)
 
 	err := HandlePostRegister(tDB)(c)
-	if err != nil {
-		t.Fatalf("err handling post register: %+v", err)
-	}
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("status code - expected %d - was %d", http.StatusBadRequest, rec.Code)
-	}
+	assert.AssertEq(t, err, nil)
+	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
 	res := schema.ErrorResponse{}
-	if err := json.NewDecoder(rec.Body).Decode(&res); err != nil {
-		t.Fatal("err decoding response: ", err)
-	}
+	err = json.NewDecoder(rec.Body).Decode(&res)
+	assert.AssertEq(t, err, nil)
 }
 
 func TestPostRegisterUserWithoutPasswordShouldFail(t *testing.T) {
 	jsonStr := `{"email": "test@example.com"}`
-	req := httptest.NewRequest("POST", "http://localhost:8080/auth/register", bytes.NewBuffer([]byte(jsonStr)))
-	req.Header.Set("Content-Type", "application/json")
 
-	rec := httptest.NewRecorder()
-	e := echo.New()
-	c := e.NewContext(req, rec)
+	rec, c := createContext("POST", "http://localhost:8080/auth/register", jsonStr)
 
 	err := HandlePostRegister(tDB)(c)
-	if err != nil {
-		t.Fatalf("err handling post register: %+v", err)
-	}
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("status code - expected %d - was %d", http.StatusBadRequest, rec.Code)
-	}
+	assert.AssertEq(t, err, nil)
+	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
 	res := schema.ErrorResponse{}
-	if err := json.NewDecoder(rec.Body).Decode(&res); err != nil {
-		t.Fatal("err decoding response: ", err)
-	}
+	err = json.NewDecoder(rec.Body).Decode(&res)
+	assert.AssertEq(t, err, nil)
 }
 
 func TestPostRegisterUserWithEmptyPasswordShouldFail(t *testing.T) {
 	jsonStr := `{"email": "test@example.com", "password": ""}`
-	req := httptest.NewRequest("POST", "http://localhost:8080/auth/register", bytes.NewBuffer([]byte(jsonStr)))
-	req.Header.Set("Content-Type", "application/json")
 
-	rec := httptest.NewRecorder()
-	e := echo.New()
-	c := e.NewContext(req, rec)
+	rec, c := createContext("POST", "http://localhost:8080/auth/register", jsonStr)
 
 	err := HandlePostRegister(tDB)(c)
-	if err != nil {
-		t.Fatalf("err handling post register: %+v", err)
-	}
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("status code - expected %d - was %d", http.StatusBadRequest, rec.Code)
-	}
+	assert.AssertEq(t, err, nil)
+	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
 	res := schema.ErrorResponse{}
-	if err := json.NewDecoder(rec.Body).Decode(&res); err != nil {
-		t.Fatal("err decoding response: ", err)
-	}
+	err = json.NewDecoder(rec.Body).Decode(&res)
+	assert.AssertEq(t, err, nil)
 }
 
 func TestPostRegisterUserWithPasswordWithoutDigitShouldFail(t *testing.T) {
 	jsonStr := `{"email": "test@example.com", "password": "Testtest"}`
-	req := httptest.NewRequest("POST", "http://localhost:8080/auth/register", bytes.NewBuffer([]byte(jsonStr)))
-	req.Header.Set("Content-Type", "application/json")
 
-	rec := httptest.NewRecorder()
-	e := echo.New()
-	c := e.NewContext(req, rec)
+	rec, c := createContext("POST", "http://localhost:8080/auth/register", jsonStr)
 
 	err := HandlePostRegister(tDB)(c)
-	if err != nil {
-		t.Fatalf("err handling post register: %+v", err)
-	}
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("status code - expected %d - was %d", http.StatusBadRequest, rec.Code)
-	}
+	assert.AssertEq(t, err, nil)
+	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
 	res := schema.ErrorResponse{}
-	if err := json.NewDecoder(rec.Body).Decode(&res); err != nil {
-		t.Fatal("err decoding response: ", err)
-	}
+	err = json.NewDecoder(rec.Body).Decode(&res)
+	assert.AssertEq(t, err, nil)
 }
 
 func TestPostRegisterUserWithPasswordWithoutUpperCaseCharacterShouldFail(t *testing.T) {
 	jsonStr := `{"email": "test@example.com", "password": "testtest1"}`
-	req := httptest.NewRequest("POST", "http://localhost:8080/auth/register", bytes.NewBuffer([]byte(jsonStr)))
-	req.Header.Set("Content-Type", "application/json")
 
-	rec := httptest.NewRecorder()
-	e := echo.New()
-	c := e.NewContext(req, rec)
+	rec, c := createContext("POST", "http://localhost:8080/auth/register", jsonStr)
 
 	err := HandlePostRegister(tDB)(c)
-	if err != nil {
-		t.Fatalf("err handling post register: %+v", err)
-	}
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("status code - expected %d - was %d", http.StatusBadRequest, rec.Code)
-	}
+	assert.AssertEq(t, err, nil)
+	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
 	res := schema.ErrorResponse{}
-	if err := json.NewDecoder(rec.Body).Decode(&res); err != nil {
-		t.Fatal("err decoding response: ", err)
-	}
+	err = json.NewDecoder(rec.Body).Decode(&res)
+	assert.AssertEq(t, err, nil)
 }
 
 func TestPostRegisterUserWithPasswordWithoutLowerCaseCharacterShouldFail(t *testing.T) {
 	jsonStr := `{"email": "test@example.com", "password": "TESTTEST1"}`
-	req := httptest.NewRequest("POST", "http://localhost:8080/auth/register", bytes.NewBuffer([]byte(jsonStr)))
-	req.Header.Set("Content-Type", "application/json")
 
-	rec := httptest.NewRecorder()
-	e := echo.New()
-	c := e.NewContext(req, rec)
+	rec, c := createContext("POST", "http://localhost:8080/auth/register", jsonStr)
 
 	err := HandlePostRegister(tDB)(c)
-	if err != nil {
-		t.Fatalf("err handling post register: %+v", err)
-	}
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("status code - expected %d - was %d", http.StatusBadRequest, rec.Code)
-	}
+	assert.AssertEq(t, err, nil)
+	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
 	res := schema.ErrorResponse{}
-	if err := json.NewDecoder(rec.Body).Decode(&res); err != nil {
-		t.Fatal("err decoding response: ", err)
-	}
+	err = json.NewDecoder(rec.Body).Decode(&res)
+	assert.AssertEq(t, err, nil)
 }
 
 func TestPostRegisterUserWithShortPasswordShouldFail(t *testing.T) {
 	jsonStr := `{"email": "test@example.com", "password": "Test123"}`
-	req := httptest.NewRequest("POST", "http://localhost:8080/auth/register", bytes.NewBuffer([]byte(jsonStr)))
-	req.Header.Set("Content-Type", "application/json")
 
-	rec := httptest.NewRecorder()
-	e := echo.New()
-	c := e.NewContext(req, rec)
+	rec, c := createContext("POST", "http://localhost:8080/auth/register", jsonStr)
 
 	err := HandlePostRegister(tDB)(c)
-	if err != nil {
-		t.Fatalf("err handling post register: %+v", err)
-	}
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("status code - expected %d - was %d", http.StatusBadRequest, rec.Code)
-	}
+	assert.AssertEq(t, err, nil)
+	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
 	res := schema.ErrorResponse{}
-	if err := json.NewDecoder(rec.Body).Decode(&res); err != nil {
-		t.Fatal("err decoding response: ", err)
-	}
+	err = json.NewDecoder(rec.Body).Decode(&res)
+	assert.AssertEq(t, err, nil)
 }
 
 func TestPostLogInWithValidCredentialsShouldPass(t *testing.T) {
 	jsonStr := `{"email": "testauth@example.com", "password": "Testpassword1"}`
-	req := httptest.NewRequest("POST", "http://localhost:8080/auth/register", bytes.NewBuffer([]byte(jsonStr)))
+
+	_, c := createContext("POST", "http://localhost:8080/auth/register", jsonStr)
+
+	err := HandlePostRegister(tDB)(c)
+	assert.AssertEq(t, err, nil)
+
+	rec, c := createContext("POST", "http://localhost:8080/auth/login", jsonStr)
+
+	err = HandlePostLogIn(tDB)(c)
+	assert.AssertEq(t, err, nil)
+	assert.AssertEq(t, rec.Code, http.StatusOK)
+	authResponse := schema.AuthResponse{}
+	err = json.NewDecoder(rec.Body).Decode(&authResponse)
+	assert.AssertEq(t, err, nil)
+}
+
+func createContext(method, url, jsonStr string) (*httptest.ResponseRecorder, echo.Context) {
+	req := httptest.NewRequest(method, url, bytes.NewBuffer([]byte(jsonStr)))
 	req.Header.Set("Content-Type", "application/json")
 
 	rec := httptest.NewRecorder()
 	e := echo.New()
 	c := e.NewContext(req, rec)
-
-	err := HandlePostRegister(tDB)(c)
-	if err != nil {
-		t.Fatalf("register failed: %+v\n", err)
-	}
-
-	req = httptest.NewRequest("POST", "http://localhost:8080/auth/login", bytes.NewBuffer([]byte(jsonStr)))
-	rec = httptest.NewRecorder()
-	c = e.NewContext(req, rec)
-	err = HandlePostLogIn(tDB)(c)
-	if err != nil {
-		t.Fatalf("log in failed: %+v\n", err)
-	}
-	if rec.Code != 200 {
-		t.Fatalf("status code - expected %d - was %d\n", http.StatusOK, rec.Code)
-	}
-	authResponse := schema.AuthResponse{}
-	if err := json.NewDecoder(rec.Body).Decode(&authResponse); err != nil {
-		t.Fatal(err)
-	}
+	return rec, c
 }
