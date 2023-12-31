@@ -14,6 +14,8 @@ import (
 )
 
 var tDB *sql.DB
+var testAdminIn schema.UserIn
+var testAdmin model.User
 var testUserIn schema.UserIn
 var testUser model.User
 var testProject model.Project
@@ -28,27 +30,49 @@ func TestMain(m *testing.M) {
 	if err := goose.Up(tDB, "../migrations"); err != nil {
 		log.Fatal("err running migrations: ", err)
 	}
-	testUserIn.Email = "testuser@example.com"
-	testUserIn.Password = "Testuser1"
-	testUser.Email = "testuser@example.com"
-	b, _ := bcrypt.GenerateFromPassword([]byte(testUserIn.Password), 4)
-	testUser.PasswordHash = string(b)
-	testUser.RoleID = 1
-	err := testUser.Create(tDB)
-	if err != nil {
-		log.Fatal("err creating test user ", err)
-	}
-	testProject.Name = "Default test project"
-	testProject.Description = "Test description"
-	testProject.UserID = testUser.ID
-	err = testProject.Create(tDB)
-	if err != nil {
-		log.Fatal("err creating test user ", err)
-	}
+	createTestAdmin()
+	createTestUser()
+	createTestProject()
 
 	code := m.Run()
 	if err := goose.Down(tDB, "../migrations"); err != nil {
 		log.Fatal("err running migrations: ", err)
 	}
 	os.Exit(code)
+}
+
+func createTestAdmin() {
+	testAdminIn.Email = "testadmin@example.com"
+	testAdminIn.Password = "Testuser1"
+	testAdmin.Email = "testadmin@example.com"
+	b, _ := bcrypt.GenerateFromPassword([]byte(testAdminIn.Password), 4)
+	testAdmin.PasswordHash = string(b)
+	testAdmin.RoleID = 1
+	err := testAdmin.Create(tDB)
+	if err != nil {
+		log.Fatal("err creating test admin ", err)
+	}
+}
+
+func createTestUser() {
+	testUserIn.Email = "testuser@example.com"
+	testUserIn.Password = "Testuser1"
+	testUser.Email = "testuser@example.com"
+	b, _ := bcrypt.GenerateFromPassword([]byte(testUserIn.Password), 4)
+	testUser.PasswordHash = string(b)
+	testUser.RoleID = 3
+	err := testUser.Create(tDB)
+	if err != nil {
+		log.Fatal("err creating test user ", err)
+	}
+}
+
+func createTestProject() {
+	testProject.Name = "Default test project"
+	testProject.Description = "Test description"
+	testProject.UserID = testAdmin.ID
+	err := testProject.Create(tDB)
+	if err != nil {
+		log.Fatal("err creating test user ", err)
+	}
 }

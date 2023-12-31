@@ -49,7 +49,7 @@ func HandleDeleteProject(db *sql.DB) echo.HandlerFunc {
 			return errors.New("unable to delete project")
 		}
 		return c.JSON(
-			http.StatusOK,
+			http.StatusNoContent,
 			schema.MessageResponse{
 				Message: fmt.Sprintf("project with ID '%d' deleted successfully", pID),
 			},

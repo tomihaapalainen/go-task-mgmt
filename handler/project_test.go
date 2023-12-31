@@ -15,7 +15,7 @@ import (
 )
 
 func TestPostCreateProjectShouldPass(t *testing.T) {
-	jsonStr := fmt.Sprintf(`{"email": "%s", "password": "%s"}`, testUserIn.Email, testUserIn.Password)
+	jsonStr := fmt.Sprintf(`{"email": "%s", "password": "%s"}`, testAdminIn.Email, testAdminIn.Password)
 
 	rec, c := createContext("POST", "http://localhost:8080/auth/login", jsonStr)
 	err := HandlePostLogIn(tDB)(c)
@@ -24,7 +24,7 @@ func TestPostCreateProjectShouldPass(t *testing.T) {
 	err = json.NewDecoder(rec.Body).Decode(&res)
 	assert.AssertEq(t, err, nil)
 
-	jsonStr = fmt.Sprintf(`{"user_id": %d, "name": "Test project", "description": "Test description"}`, testUser.ID)
+	jsonStr = fmt.Sprintf(`{"user_id": %d, "name": "Test project", "description": "Test description"}`, testAdmin.ID)
 	rec, c = createContext("POST", "http://localhost:8080/project/create", jsonStr)
 	c.Request().Header.Set("Authorization", fmt.Sprintf("%s %s", res.TokenType, res.AccessToken))
 	err = mw.JwtMiddleware(mw.PermissionRequired(tDB, "create project")(HandlePostCreateProject(tDB)))(c)
@@ -34,10 +34,10 @@ func TestPostCreateProjectShouldPass(t *testing.T) {
 	err = json.NewDecoder(rec.Body).Decode(&project)
 	assert.AssertEq(t, err, nil)
 	assert.AssertNotEq(t, project.ID, 0)
-	assert.AssertEq(t, project.UserID, testUser.ID)
+	assert.AssertEq(t, project.UserID, testAdmin.ID)
 }
 
-func TestDeleteProjectShouldPass(t *testing.T) {
+func TestDeleteProjectWithoutPermissionShouldFail(t *testing.T) {
 	jsonStr := fmt.Sprintf(`{"email": "%s", "password": "%s"}`, testUserIn.Email, testUserIn.Password)
 
 	rec, c := createContext("POST", "http://localhost:8080/auth/login", jsonStr)
@@ -49,13 +49,39 @@ func TestDeleteProjectShouldPass(t *testing.T) {
 
 	e := echo.New()
 	req := httptest.NewRequest("DELETE", "http://localhost:8080/project/:id", nil)
+	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
 	c.SetParamNames("id")
 	c.SetParamValues(fmt.Sprintf("%d", testProject.ID))
 	c.Request().Header.Set("Authorization", fmt.Sprintf("%s %s", res.TokenType, res.AccessToken))
 	err = mw.JwtMiddleware(mw.PermissionRequired(tDB, "delete project")(HandleDeleteProject(tDB)))(c)
 	assert.AssertEq(t, err, nil)
-	assert.AssertEq(t, rec.Code, http.StatusOK)
+	assert.AssertEq(t, rec.Code, http.StatusForbidden)
+	r := schema.MessageResponse{}
+	err = json.NewDecoder(rec.Body).Decode(&r)
+	assert.AssertEq(t, err, nil)
+}
+
+func TestDeleteProjectShouldPass(t *testing.T) {
+	jsonStr := fmt.Sprintf(`{"email": "%s", "password": "%s"}`, testAdminIn.Email, testAdminIn.Password)
+
+	rec, c := createContext("POST", "http://localhost:8080/auth/login", jsonStr)
+	err := HandlePostLogIn(tDB)(c)
+	assert.AssertEq(t, err, nil)
+	res := schema.AuthResponse{}
+	err = json.NewDecoder(rec.Body).Decode(&res)
+	assert.AssertEq(t, err, nil)
+
+	e := echo.New()
+	req := httptest.NewRequest("DELETE", "http://localhost:8080/project/:id", nil)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", testProject.ID))
+	c.Request().Header.Set("Authorization", fmt.Sprintf("%s %s", res.TokenType, res.AccessToken))
+	err = mw.JwtMiddleware(mw.PermissionRequired(tDB, "delete project")(HandleDeleteProject(tDB)))(c)
+	assert.AssertEq(t, err, nil)
+	assert.AssertEq(t, rec.Code, http.StatusNoContent)
 	r := schema.MessageResponse{}
 	err = json.NewDecoder(rec.Body).Decode(&r)
 	assert.AssertEq(t, err, nil)
