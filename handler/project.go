@@ -4,11 +4,14 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/tomihaapalainen/go-task-mgmt/model"
+	"github.com/tomihaapalainen/go-task-mgmt/schema"
 )
 
 func HandlePostCreateProject(db *sql.DB) echo.HandlerFunc {
@@ -28,5 +31,28 @@ func HandlePostCreateProject(db *sql.DB) echo.HandlerFunc {
 		}
 
 		return c.JSON(http.StatusOK, project)
+	})
+}
+
+func HandleDeleteProject(db *sql.DB) echo.HandlerFunc {
+	return echo.HandlerFunc(func(c echo.Context) error {
+		projectID := c.Param("id")
+
+		pID, err := strconv.Atoi(projectID)
+		if err != nil {
+			return fmt.Errorf("invalid project ID '%s'", projectID)
+		}
+
+		project := model.Project{ID: pID}
+		if err := project.Delete(db); err != nil {
+			log.Println("err deleting project: ", err)
+			return errors.New("unable to delete project")
+		}
+		return c.JSON(
+			http.StatusOK,
+			schema.MessageResponse{
+				Message: fmt.Sprintf("project with ID '%d' deleted successfully", pID),
+			},
+		)
 	})
 }

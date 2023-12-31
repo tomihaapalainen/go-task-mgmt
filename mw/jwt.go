@@ -18,7 +18,7 @@ func JwtMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		if tokenStr == "" {
 			return c.JSON(
 				http.StatusUnauthorized,
-				schema.ErrorResponse{Message: "Missing authorization header"},
+				schema.MessageResponse{Message: "Missing authorization header"},
 			)
 		}
 
@@ -27,7 +27,7 @@ func JwtMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			log.Println("err parsing auth token: ", err)
 			return c.JSON(
 				http.StatusUnauthorized,
-				schema.ErrorResponse{Message: "Error parsing authorization token"},
+				schema.MessageResponse{Message: "Error parsing authorization token"},
 			)
 		}
 		err = claims.Valid()
@@ -35,7 +35,7 @@ func JwtMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			log.Println("err invalid claims: ", err)
 			return c.JSON(
 				http.StatusUnauthorized,
-				schema.ErrorResponse{Message: "Invalid claims"},
+				schema.MessageResponse{Message: "Invalid claims"},
 			)
 		}
 		userData := claims["data"].(string)

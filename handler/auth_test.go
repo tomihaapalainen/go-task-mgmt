@@ -38,7 +38,7 @@ func TestPostRegisterUserWithoutEmailShouldFail(t *testing.T) {
 	err := HandlePostRegister(tDB)(c)
 	assert.AssertEq(t, err, nil)
 	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
-	res := schema.ErrorResponse{}
+	res := schema.MessageResponse{}
 	err = json.NewDecoder(rec.Body).Decode(&res)
 	assert.AssertEq(t, err, nil)
 }
@@ -51,7 +51,7 @@ func TestPostRegisterUserWithEmptyEmailShouldFail(t *testing.T) {
 	err := HandlePostRegister(tDB)(c)
 	assert.AssertEq(t, err, nil)
 	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
-	res := schema.ErrorResponse{}
+	res := schema.MessageResponse{}
 	err = json.NewDecoder(rec.Body).Decode(&res)
 	assert.AssertEq(t, err, nil)
 }
@@ -64,7 +64,7 @@ func TestPostRegisterUserWithoutPasswordShouldFail(t *testing.T) {
 	err := HandlePostRegister(tDB)(c)
 	assert.AssertEq(t, err, nil)
 	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
-	res := schema.ErrorResponse{}
+	res := schema.MessageResponse{}
 	err = json.NewDecoder(rec.Body).Decode(&res)
 	assert.AssertEq(t, err, nil)
 }
@@ -77,7 +77,7 @@ func TestPostRegisterUserWithEmptyPasswordShouldFail(t *testing.T) {
 	err := HandlePostRegister(tDB)(c)
 	assert.AssertEq(t, err, nil)
 	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
-	res := schema.ErrorResponse{}
+	res := schema.MessageResponse{}
 	err = json.NewDecoder(rec.Body).Decode(&res)
 	assert.AssertEq(t, err, nil)
 }
@@ -90,7 +90,7 @@ func TestPostRegisterUserWithPasswordWithoutDigitShouldFail(t *testing.T) {
 	err := HandlePostRegister(tDB)(c)
 	assert.AssertEq(t, err, nil)
 	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
-	res := schema.ErrorResponse{}
+	res := schema.MessageResponse{}
 	err = json.NewDecoder(rec.Body).Decode(&res)
 	assert.AssertEq(t, err, nil)
 }
@@ -103,7 +103,7 @@ func TestPostRegisterUserWithPasswordWithoutUpperCaseCharacterShouldFail(t *test
 	err := HandlePostRegister(tDB)(c)
 	assert.AssertEq(t, err, nil)
 	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
-	res := schema.ErrorResponse{}
+	res := schema.MessageResponse{}
 	err = json.NewDecoder(rec.Body).Decode(&res)
 	assert.AssertEq(t, err, nil)
 }
@@ -116,7 +116,7 @@ func TestPostRegisterUserWithPasswordWithoutLowerCaseCharacterShouldFail(t *test
 	err := HandlePostRegister(tDB)(c)
 	assert.AssertEq(t, err, nil)
 	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
-	res := schema.ErrorResponse{}
+	res := schema.MessageResponse{}
 	err = json.NewDecoder(rec.Body).Decode(&res)
 	assert.AssertEq(t, err, nil)
 }
@@ -129,7 +129,7 @@ func TestPostRegisterUserWithShortPasswordShouldFail(t *testing.T) {
 	err := HandlePostRegister(tDB)(c)
 	assert.AssertEq(t, err, nil)
 	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
-	res := schema.ErrorResponse{}
+	res := schema.MessageResponse{}
 	err = json.NewDecoder(rec.Body).Decode(&res)
 	assert.AssertEq(t, err, nil)
 }

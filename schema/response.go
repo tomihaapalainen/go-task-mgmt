@@ -6,6 +6,6 @@ type AuthResponse struct {
 	Expires     int64
 }
 
-type ErrorResponse struct {
+type MessageResponse struct {
 	Message string `json:"message"`
 }

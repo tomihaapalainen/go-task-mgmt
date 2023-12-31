@@ -53,7 +53,7 @@ func HandlePostRegister(db *sql.DB) echo.HandlerFunc {
 			log.Println("err decoding request body: ", err)
 			return c.JSON(
 				http.StatusBadRequest,
-				schema.ErrorResponse{
+				schema.MessageResponse{
 					Message: "Invalid request data",
 				},
 			)
@@ -63,7 +63,7 @@ func HandlePostRegister(db *sql.DB) echo.HandlerFunc {
 		if !emailIsValid(userIn.Email) {
 			return c.JSON(
 				http.StatusBadRequest,
-				schema.ErrorResponse{
+				schema.MessageResponse{
 					Message: "'email' must be a valid email address",
 				},
 			)
@@ -71,7 +71,7 @@ func HandlePostRegister(db *sql.DB) echo.HandlerFunc {
 		if !passwordIsValid(userIn.Password) {
 			return c.JSON(
 				http.StatusBadRequest,
-				schema.ErrorResponse{
+				schema.MessageResponse{
 					Message: `'password' must be at least 8 characters long,
 						contain 1 upper case character, 1 lower case character and 1 digit`,
 				},
@@ -83,7 +83,7 @@ func HandlePostRegister(db *sql.DB) echo.HandlerFunc {
 			log.Println("err generating password hash:", err)
 			return c.JSON(
 				http.StatusInternalServerError,
-				schema.ErrorResponse{Message: "Error generating password hash"},
+				schema.MessageResponse{Message: "Error generating password hash"},
 			)
 		}
 
@@ -93,14 +93,14 @@ func HandlePostRegister(db *sql.DB) echo.HandlerFunc {
 			if errors.Is(err, sqlite3.ErrConstraintUnique) {
 				return c.JSON(
 					http.StatusBadRequest,
-					schema.ErrorResponse{
+					schema.MessageResponse{
 						Message: fmt.Sprintf("User with email '%s' already exists", user.Email),
 					},
 				)
 			}
 			return c.JSON(
 				http.StatusInternalServerError,
-				schema.ErrorResponse{Message: "Unable to create user"},
+				schema.MessageResponse{Message: "Unable to create user"},
 			)
 		}
 
@@ -118,7 +118,7 @@ func HandlePostLogIn(db *sql.DB) echo.HandlerFunc {
 			log.Println("err decoding request body: ", err)
 			return c.JSON(
 				http.StatusBadRequest,
-				schema.ErrorResponse{
+				schema.MessageResponse{
 					Message: "Invalid request data",
 				},
 			)
@@ -129,7 +129,7 @@ func HandlePostLogIn(db *sql.DB) echo.HandlerFunc {
 			log.Println("err reading user by email: ", err)
 			return c.JSON(
 				http.StatusBadRequest,
-				schema.ErrorResponse{
+				schema.MessageResponse{
 					Message: fmt.Sprintf("error reading user by email '%s'", user.Email),
 				},
 			)
@@ -154,7 +154,7 @@ func HandlePostLogIn(db *sql.DB) echo.HandlerFunc {
 			log.Println("err signing token ", err)
 			return c.JSON(
 				http.StatusInternalServerError,
-				schema.ErrorResponse{Message: "Error signing JWT token"},
+				schema.MessageResponse{Message: "Error signing JWT token"},
 			)
 		}
 

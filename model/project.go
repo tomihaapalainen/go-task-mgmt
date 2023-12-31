@@ -1,6 +1,8 @@
 package model
 
-import "database/sql"
+import (
+	"database/sql"
+)
 
 type Project struct {
 	ID          int
@@ -19,4 +21,18 @@ func (p *Project) Create(db *sql.DB) error {
 		return err
 	}
 	return stmt.QueryRow(p.UserID, p.Name, p.Description).Scan(&p.ID)
+}
+
+func (p *Project) Delete(db *sql.DB) error {
+	stmt, err := db.Prepare(
+		`
+		DELETE FROM project
+		WHERE id = $1
+		`,
+	)
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(p.ID)
+	return err
 }
