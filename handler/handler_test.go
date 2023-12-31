@@ -1,11 +1,14 @@
 package handler
 
 import (
+	"bytes"
 	"database/sql"
 	"log"
+	"net/http/httptest"
 	"os"
 	"testing"
 
+	"github.com/labstack/echo/v4"
 	"github.com/pressly/goose"
 	"github.com/tomihaapalainen/go-task-mgmt/dotenv"
 	"github.com/tomihaapalainen/go-task-mgmt/model"
@@ -39,6 +42,28 @@ func TestMain(m *testing.M) {
 		log.Fatal("err running migrations: ", err)
 	}
 	os.Exit(code)
+}
+
+func createContext(method, url, jsonStr string) (*httptest.ResponseRecorder, echo.Context) {
+	req := httptest.NewRequest(method, url, bytes.NewBuffer([]byte(jsonStr)))
+	req.Header.Set("Content-Type", "application/json")
+
+	rec := httptest.NewRecorder()
+	e := echo.New()
+	c := e.NewContext(req, rec)
+	return rec, c
+}
+
+func createContextWithParams(method, url, jsonStr string, names []string, values []string) (*httptest.ResponseRecorder, echo.Context) {
+	req := httptest.NewRequest(method, url, bytes.NewBuffer([]byte(jsonStr)))
+	req.Header.Set("Content-Type", "application/json")
+
+	rec := httptest.NewRecorder()
+	e := echo.New()
+	c := e.NewContext(req, rec)
+	c.SetParamNames(names...)
+	c.SetParamValues(values...)
+	return rec, c
 }
 
 func createTestAdmin() {

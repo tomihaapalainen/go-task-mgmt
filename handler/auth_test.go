@@ -1,13 +1,10 @@
 package handler
 
 import (
-	"bytes"
 	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
-	"github.com/labstack/echo/v4"
 	"github.com/tomihaapalainen/go-task-mgmt/assert"
 	"github.com/tomihaapalainen/go-task-mgmt/model"
 	"github.com/tomihaapalainen/go-task-mgmt/schema"
@@ -150,14 +147,4 @@ func TestPostLogInWithValidCredentialsShouldPass(t *testing.T) {
 	authResponse := schema.AuthResponse{}
 	err = json.NewDecoder(rec.Body).Decode(&authResponse)
 	assert.AssertEq(t, err, nil)
-}
-
-func createContext(method, url, jsonStr string) (*httptest.ResponseRecorder, echo.Context) {
-	req := httptest.NewRequest(method, url, bytes.NewBuffer([]byte(jsonStr)))
-	req.Header.Set("Content-Type", "application/json")
-
-	rec := httptest.NewRecorder()
-	e := echo.New()
-	c := e.NewContext(req, rec)
-	return rec, c
 }
