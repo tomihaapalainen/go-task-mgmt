@@ -1,12 +1,14 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/tomihaapalainen/go-task-mgmt/assert"
 	"github.com/tomihaapalainen/go-task-mgmt/constants"
+	"github.com/tomihaapalainen/go-task-mgmt/model"
 	"github.com/tomihaapalainen/go-task-mgmt/mw"
 )
 
@@ -39,6 +41,32 @@ func TestPostCreateTask(t *testing.T) {
 			err := mw.JwtMiddleware(mw.PermissionRequired(tDB, "create task")(HandlePostCreateTask(tDB)))(c)
 			assert.AssertEq(t, err, nil)
 			assert.AssertEq(t, rec.Code, http.StatusOK)
+			task := model.Task{}
+			err = json.NewDecoder(rec.Body).Decode(&task)
+			assert.AssertEq(t, err, nil)
+			assert.AssertNotEq(t, task.ID, 0)
+			assert.AssertEq(t, task.AssigneeID, tc.id)
+			assert.AssertEq(t, task.CreatorID, tc.id)
+			assert.AssertEq(t, task.Title, tc.title)
+			assert.AssertEq(t, task.Content, tc.content)
+			assert.AssertEq(t, task.Status, tc.status)
 		})
 	}
+}
+
+func TestDeleteTaskShouldPass(t *testing.T) {
+	authRes := login(t, testUserIn.Email, testUserIn.Password)
+
+	rec, c := createContextWithParams(
+		"DELETE",
+		"http://localhost:8080/project/:projectID/task/:id",
+		"",
+		[]string{"projectID", "id"},
+		[]string{fmt.Sprintf("%d", testProject.ID), fmt.Sprintf("%d", testTaskForDeletion.ID)},
+	)
+
+	c.Request().Header.Set("Authorization", fmt.Sprintf("%s %s", authRes.TokenType, authRes.AccessToken))
+	err := mw.JwtMiddleware(mw.PermissionRequired(tDB, "delete task")(HandleDeleteTask(tDB)))(c)
+	assert.AssertEq(t, err, nil)
+	assert.AssertEq(t, rec.Code, http.StatusNoContent)
 }

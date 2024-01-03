@@ -31,3 +31,17 @@ func (t *Task) Create(db *sql.DB) error {
 
 	return stmt.QueryRow(t.ProjectID, t.AssigneeID, t.CreatorID, t.Title, t.Content, t.Status).Scan(&t.ID)
 }
+
+func (t *Task) Delete(db *sql.DB) error {
+	stmt, err := db.Prepare(
+		`
+		DELETE FROM task
+		WHERE id = $1 AND project_id = $2
+		`,
+	)
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(t.ID, t.ProjectID)
+	return err
+}

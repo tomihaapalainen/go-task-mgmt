@@ -48,3 +48,28 @@ func HandlePostCreateTask(db *sql.DB) echo.HandlerFunc {
 		return c.JSON(http.StatusOK, task)
 	})
 }
+
+func HandleDeleteTask(db *sql.DB) echo.HandlerFunc {
+	return echo.HandlerFunc(func(c echo.Context) error {
+		projectID := c.Param("projectID")
+		pID, err := strconv.Atoi(projectID)
+		if err != nil {
+			return fmt.Errorf("invalid project ID '%s'", projectID)
+		}
+		taskID := c.Param("id")
+		tID, err := strconv.Atoi(taskID)
+		if err != nil {
+			return fmt.Errorf("invalid project ID '%s'", taskID)
+		}
+
+		task := model.Task{ID: tID, ProjectID: pID}
+		if err := task.Delete(db); err != nil {
+			return fmt.Errorf("unable to delete project '%d' task '%d'", pID, tID)
+		}
+
+		return c.JSON(
+			http.StatusNoContent,
+			schema.MessageResponse{Message: fmt.Sprintf("task '%d' deleted successfully", tID)},
+		)
+	})
+}

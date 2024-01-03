@@ -29,6 +29,7 @@ var testUserIn schema.UserIn
 var testUser model.User
 var testProject model.Project
 var testProjectForDeletion model.Project
+var testTaskForDeletion model.Task
 
 func TestMain(m *testing.M) {
 	dotenv.ParseDotenv("../.env")
@@ -46,6 +47,7 @@ func TestMain(m *testing.M) {
 	testUserIn, testUser = createTestUserWithRole("testuser@example.com", "Testpass1", constants.UserRoleID)
 	testProject = createTestProject("Test project", testAdmin.ID)
 	testProjectForDeletion = createTestProject("Test project for deletion", testAdmin.ID)
+	testTaskForDeletion = createTestTask(testUser.ID, testUser.ID, "Test user task", "Test user task content", constants.Todo)
 
 	code := m.Run()
 	if err := goose.Down(tDB, "../migrations"); err != nil {
@@ -102,6 +104,22 @@ func createTestProject(name string, userID int) model.Project {
 		log.Fatal("err creating test user ", err)
 	}
 	return p
+}
+
+func createTestTask(assigneeID, creatorID int, title, content string, status constants.TaskStatus) model.Task {
+	t := model.Task{
+		ProjectID:  testProject.ID,
+		AssigneeID: assigneeID,
+		CreatorID:  creatorID,
+		Title:      title,
+		Content:    content,
+		Status:     status,
+	}
+	err := t.Create(tDB)
+	if err != nil {
+		log.Fatal("err creating task: ", err)
+	}
+	return t
 }
 
 func login(t *testing.T, email, password string) schema.AuthResponse {
