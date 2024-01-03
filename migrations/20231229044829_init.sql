@@ -44,6 +44,7 @@ INSERT INTO role_permission (role_id, permission_id) values(2, 6);
 INSERT INTO role_permission (role_id, permission_id) values(2, 7);
 INSERT INTO role_permission (role_id, permission_id) values(2, 8);
 INSERT INTO role_permission (role_id, permission_id) values(2, 9);
+INSERT INTO role_permission (role_id, permission_id) values(3, 3);
 INSERT INTO role_permission (role_id, permission_id) values(3, 6);
 INSERT INTO role_permission (role_id, permission_id) values(3, 7);
 INSERT INTO role_permission (role_id, permission_id) values(3, 8);

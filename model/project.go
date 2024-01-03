@@ -23,6 +23,20 @@ func (p *Project) Create(db *sql.DB) error {
 	return stmt.QueryRow(p.UserID, p.Name, p.Description).Scan(&p.ID)
 }
 
+func (p *Project) ReadByID(db *sql.DB) error {
+	stmt, err := db.Prepare(
+		`
+		SELECT user_id, name, description
+		FROM project
+		WHERE id = $1
+		`,
+	)
+	if err != nil {
+		return err
+	}
+	return stmt.QueryRow(p.ID).Scan(&p.UserID, &p.Name, &p.Description)
+}
+
 func (p *Project) Delete(db *sql.DB) error {
 	stmt, err := db.Prepare(
 		`

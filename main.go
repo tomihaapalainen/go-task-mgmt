@@ -45,6 +45,7 @@ func main() {
 
 	projectGroup := e.Group("/project", mw.JwtMiddleware)
 	projectGroup.POST("/create", handler.HandlePostCreateProject(db), mw.PermissionRequired(db, "create project"))
+	projectGroup.GET("/:id", handler.HandleGetProjectID(db), mw.PermissionRequired(db, "read project"))
 	projectGroup.DELETE("/:id", handler.HandleDeleteProject(db), mw.PermissionRequired(db, "delete project"))
 
 	taskGroup := projectGroup.Group("/:projectID")

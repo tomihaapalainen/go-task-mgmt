@@ -34,6 +34,27 @@ func HandlePostCreateProject(db *sql.DB) echo.HandlerFunc {
 	})
 }
 
+func HandleGetProjectID(db *sql.DB) echo.HandlerFunc {
+	return echo.HandlerFunc(func(c echo.Context) error {
+		projectID := c.Param("id")
+		pID, err := strconv.Atoi(projectID)
+		if err != nil {
+			return fmt.Errorf("invalid project ID '%s'", projectID)
+		}
+
+		project := model.Project{ID: pID}
+		if err := project.ReadByID(db); err != nil {
+			log.Println("err reading project by ID: ", err)
+			return errors.New("unable to read project")
+		}
+
+		return c.JSON(
+			http.StatusOK,
+			project,
+		)
+	})
+}
+
 func HandleDeleteProject(db *sql.DB) echo.HandlerFunc {
 	return echo.HandlerFunc(func(c echo.Context) error {
 		projectID := c.Param("id")
