@@ -29,7 +29,7 @@ func PermissionRequired(db *sql.DB, permission string) func(next echo.HandlerFun
 				return c.JSON(
 					http.StatusForbidden,
 					schema.MessageResponse{
-						Message: fmt.Sprintf("user '%s' does not have permission to create a new project", user.Email)})
+						Message: fmt.Sprintf("user '%s' does not have permission to run this command", user.Email)})
 			}
 			return next(c)
 		})

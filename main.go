@@ -40,6 +40,9 @@ func main() {
 	authGroup.POST("/register", handler.HandlePostRegister(db))
 	authGroup.POST("/login", handler.HandlePostLogIn(db))
 
+	roleGroup := e.Group("/role", mw.JwtMiddleware)
+	roleGroup.PATCH("/assign", handler.HandlePatchAssignRole(db), mw.PermissionRequired(db, "manage roles"))
+
 	projectGroup := e.Group("/project", mw.JwtMiddleware)
 	projectGroup.POST("/create", handler.HandlePostCreateProject(db), mw.PermissionRequired(db, "create project"))
 	projectGroup.DELETE("/:id", handler.HandleDeleteProject(db), mw.PermissionRequired(db, "delete project"))

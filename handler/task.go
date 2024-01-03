@@ -29,8 +29,6 @@ func HandlePostCreateTask(db *sql.DB) echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, schema.MessageResponse{Message: "invalid request body"})
 		}
 
-		log.Println("TASK IN::", taskIn)
-
 		task := model.Task{
 			ProjectID:  pID,
 			AssigneeID: taskIn.AssigneeID,
@@ -39,7 +37,6 @@ func HandlePostCreateTask(db *sql.DB) echo.HandlerFunc {
 			Content:    taskIn.Content,
 			Status:     taskIn.Status,
 		}
-		log.Printf("TASK :: %+v", task)
 		if err := task.Create(db); err != nil {
 			log.Println("err creating task: ", err)
 			return fmt.Errorf("error creating task")

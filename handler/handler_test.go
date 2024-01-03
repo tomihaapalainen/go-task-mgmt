@@ -27,6 +27,8 @@ var testProjectManagerIn schema.UserIn
 var testProjectManager model.User
 var testUserIn schema.UserIn
 var testUser model.User
+var testUserForRoleIn schema.UserIn
+var testUserForRole model.User
 var testProject model.Project
 var testProjectForDeletion model.Project
 var testTaskForDeletion model.Task
@@ -45,6 +47,7 @@ func TestMain(m *testing.M) {
 	testAdminIn, testAdmin = createTestUserWithRole("testadmin@example.com", "Testpass1", constants.AdminRoleID)
 	testProjectManagerIn, testProjectManager = createTestUserWithRole("testprojectmanager@example.com", "Testpass1", constants.ProjectManagerRoleID)
 	testUserIn, testUser = createTestUserWithRole("testuser@example.com", "Testpass1", constants.UserRoleID)
+	testUserForRoleIn, testUserForRole = createTestUserWithRole("testuserforrole@example.com", "Testpass1", constants.UserRoleID)
 	testProject = createTestProject("Test project", testAdmin.ID)
 	testProjectForDeletion = createTestProject("Test project for deletion", testAdmin.ID)
 	testTaskForDeletion = createTestTask(testUser.ID, testUser.ID, "Test user task", "Test user task content", constants.Todo)
