@@ -32,6 +32,20 @@ func (t *Task) Create(db *sql.DB) error {
 	return stmt.QueryRow(t.ProjectID, t.AssigneeID, t.CreatorID, t.Title, t.Content, t.Status).Scan(&t.ID)
 }
 
+func (t *Task) ReadByID(db *sql.DB) error {
+	stmt, err := db.Prepare(
+		`
+		SELECT assignee_id, creator_id, title, content, status
+		FROM task
+		WHERE id = $1 AND project_id = $2
+		`,
+	)
+	if err != nil {
+		return err
+	}
+	return stmt.QueryRow(t.ID, t.ProjectID).Scan(&t.AssigneeID, &t.CreatorID, &t.Title, &t.Content, &t.Status)
+}
+
 func (t *Task) Delete(db *sql.DB) error {
 	stmt, err := db.Prepare(
 		`

@@ -31,6 +31,7 @@ var testUserForRoleIn schema.UserIn
 var testUserForRole model.User
 var testProject model.Project
 var testProjectForDeletion model.Project
+var testTask model.Task
 var testTaskForDeletion model.Task
 
 func TestMain(m *testing.M) {
@@ -50,7 +51,8 @@ func TestMain(m *testing.M) {
 	testUserForRoleIn, testUserForRole = createTestUserWithRole("testuserforrole@example.com", "Testpass1", constants.UserRoleID)
 	testProject = createTestProject("Test project", testAdmin.ID)
 	testProjectForDeletion = createTestProject("Test project for deletion", testAdmin.ID)
-	testTaskForDeletion = createTestTask(testUser.ID, testUser.ID, "Test user task", "Test user task content", constants.Todo)
+	testTask = createTestTask(testUser.ID, testUser.ID, "Test user task", "Test user task content", constants.Todo)
+	testTaskForDeletion = createTestTask(testUser.ID, testUser.ID, "Test user task for deletion", "Test user task content", constants.Todo)
 
 	code := m.Run()
 	if err := goose.Down(tDB, "../migrations"); err != nil {

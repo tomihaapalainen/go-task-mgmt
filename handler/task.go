@@ -3,6 +3,7 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -43,6 +44,32 @@ func HandlePostCreateTask(db *sql.DB) echo.HandlerFunc {
 		}
 
 		return c.JSON(http.StatusOK, task)
+	})
+}
+
+func HandleGetTaskID(db *sql.DB) echo.HandlerFunc {
+	return echo.HandlerFunc(func(c echo.Context) error {
+		projectID := c.Param("projectID")
+		pID, err := strconv.Atoi(projectID)
+		if err != nil {
+			return fmt.Errorf("invalid project ID '%s'", projectID)
+		}
+		taskID := c.Param("id")
+		tID, err := strconv.Atoi(taskID)
+		if err != nil {
+			return fmt.Errorf("invalid task ID '%s'", taskID)
+		}
+
+		task := model.Task{ID: tID, ProjectID: pID}
+		if err := task.ReadByID(db); err != nil {
+			log.Println("err reading task by ID: ", err)
+			return errors.New("unable to read task")
+		}
+
+		return c.JSON(
+			http.StatusOK,
+			task,
+		)
 	})
 }
 

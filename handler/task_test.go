@@ -70,3 +70,28 @@ func TestDeleteTaskShouldPass(t *testing.T) {
 	assert.AssertEq(t, err, nil)
 	assert.AssertEq(t, rec.Code, http.StatusNoContent)
 }
+
+func TestReadTaskShouldPass(t *testing.T) {
+	authRes := login(t, testUserIn.Email, testUserIn.Password)
+
+	rec, c := createContextWithParams(
+		"GET",
+		"http://localhost:8080/project/:projectID/task/:id",
+		"",
+		[]string{"projectID", "id"},
+		[]string{fmt.Sprintf("%d", testProject.ID), fmt.Sprintf("%d", testTask.ID)},
+	)
+	c.Request().Header.Set("Authorization", fmt.Sprintf("%s %s", authRes.TokenType, authRes.AccessToken))
+	err := mw.JwtMiddleware(mw.PermissionRequired(tDB, "read task")(HandleGetTaskID(tDB)))(c)
+	assert.AssertEq(t, err, nil)
+	assert.AssertEq(t, rec.Code, http.StatusOK)
+	task := model.Task{}
+	err = json.NewDecoder(rec.Body).Decode(&task)
+	assert.AssertEq(t, err, nil)
+	assert.AssertEq(t, task.ID, testTask.ID)
+	assert.AssertEq(t, task.AssigneeID, testTask.AssigneeID)
+	assert.AssertEq(t, task.CreatorID, testTask.CreatorID)
+	assert.AssertEq(t, task.Title, testTask.Title)
+	assert.AssertEq(t, task.Content, testTask.Content)
+	assert.AssertEq(t, task.Status, testTask.Status)
+}
