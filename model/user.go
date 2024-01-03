@@ -1,12 +1,16 @@
 package model
 
-import "database/sql"
+import (
+	"database/sql"
+
+	"github.com/tomihaapalainen/go-task-mgmt/constants"
+)
 
 type User struct {
-	ID           int    `json:"id"`
-	Email        string `json:"email"`
-	PasswordHash string `json:"-"`
-	RoleID       int    `json:"role_id"`
+	ID           int              `json:"id"`
+	Email        string           `json:"email"`
+	PasswordHash string           `json:"-"`
+	RoleID       constants.RoleID `json:"role_id"`
 }
 
 func (u *User) Create(db *sql.DB) error {

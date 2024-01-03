@@ -44,5 +44,8 @@ func main() {
 	projectGroup.POST("/create", handler.HandlePostCreateProject(db), mw.PermissionRequired(db, "create project"))
 	projectGroup.DELETE("/:id", handler.HandleDeleteProject(db), mw.PermissionRequired(db, "delete project"))
 
+	taskGroup := projectGroup.Group("/:projectID")
+	taskGroup.POST("/task/create", handler.HandlePostCreateTask(db), mw.PermissionRequired(db, "create task"))
+
 	e.Start(config.PORT)
 }

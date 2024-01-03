@@ -16,6 +16,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/mattn/go-sqlite3"
+	"github.com/tomihaapalainen/go-task-mgmt/constants"
 	"github.com/tomihaapalainen/go-task-mgmt/model"
 	"github.com/tomihaapalainen/go-task-mgmt/schema"
 	"golang.org/x/crypto/bcrypt"
@@ -87,7 +88,7 @@ func HandlePostRegister(db *sql.DB) echo.HandlerFunc {
 			)
 		}
 
-		user := model.User{Email: userIn.Email, PasswordHash: string(passwordHash), RoleID: 1}
+		user := model.User{Email: userIn.Email, PasswordHash: string(passwordHash), RoleID: constants.UserRoleID}
 		if err := user.Create(db); err != nil {
 			log.Printf("err creating user %+v: %+v\n", user, err)
 			if errors.Is(err, sqlite3.ErrConstraintUnique) {

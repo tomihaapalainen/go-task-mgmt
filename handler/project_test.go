@@ -13,64 +13,56 @@ import (
 )
 
 func TestPostCreateProjectShouldPass(t *testing.T) {
-	jsonStr := fmt.Sprintf(`{"email": "%s", "password": "%s"}`, testAdminIn.Email, testAdminIn.Password)
+	testCases := []struct {
+		id          int
+		email       string
+		password    string
+		projectName string
+	}{
+		{testAdmin.ID, testAdminIn.Email, testAdminIn.Password, "Test project by admin"},
+		{testProjectManager.ID, testProjectManagerIn.Email, testProjectManagerIn.Password, "Test project by project manager"},
+	}
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("%s %s %s", tc.email, tc.password, tc.projectName), func(t *testing.T) {
+			authRes := login(t, tc.email, tc.password)
 
-	rec, c := createContext("POST", "http://localhost:8080/auth/login", jsonStr)
-	err := HandlePostLogIn(tDB)(c)
-	assert.AssertEq(t, err, nil)
-	res := schema.AuthResponse{}
-	err = json.NewDecoder(rec.Body).Decode(&res)
-	assert.AssertEq(t, err, nil)
-
-	jsonStr = fmt.Sprintf(`{"user_id": %d, "name": "Test project", "description": "Test description"}`, testAdmin.ID)
-	rec, c = createContext("POST", "http://localhost:8080/project/create", jsonStr)
-	c.Request().Header.Set("Authorization", fmt.Sprintf("%s %s", res.TokenType, res.AccessToken))
-	err = mw.JwtMiddleware(mw.PermissionRequired(tDB, "create project")(HandlePostCreateProject(tDB)))(c)
-	assert.AssertEq(t, err, nil)
-	assert.AssertEq(t, rec.Code, http.StatusOK)
-	project := model.Project{}
-	err = json.NewDecoder(rec.Body).Decode(&project)
-	assert.AssertEq(t, err, nil)
-	assert.AssertNotEq(t, project.ID, 0)
-	assert.AssertEq(t, project.UserID, testAdmin.ID)
+			jsonStr := fmt.Sprintf(`{"user_id": %d, "name": "%s", "description": "Test description"}`, tc.id, tc.projectName)
+			rec, c := createContext("POST", "http://localhost:8080/project/create", jsonStr)
+			c.Request().Header.Set("Authorization", fmt.Sprintf("%s %s", authRes.TokenType, authRes.AccessToken))
+			err := mw.JwtMiddleware(mw.PermissionRequired(tDB, "create project")(HandlePostCreateProject(tDB)))(c)
+			assert.AssertEq(t, err, nil)
+			assert.AssertEq(t, rec.Code, http.StatusOK)
+			project := model.Project{}
+			err = json.NewDecoder(rec.Body).Decode(&project)
+			assert.AssertEq(t, err, nil)
+			assert.AssertNotEq(t, project.ID, 0)
+			assert.AssertEq(t, project.UserID, tc.id)
+		})
+	}
 }
 
 func TestPostCreateProjectWithoutPermissionShouldFail(t *testing.T) {
-	jsonStr := fmt.Sprintf(`{"email": "%s", "password": "%s"}`, testUserIn.Email, testUserIn.Password)
+	authRes := login(t, testUserIn.Email, testUserIn.Password)
 
-	rec, c := createContext("POST", "http://localhost:8080/auth/login", jsonStr)
-	err := HandlePostLogIn(tDB)(c)
-	assert.AssertEq(t, err, nil)
-	res := schema.AuthResponse{}
-	err = json.NewDecoder(rec.Body).Decode(&res)
-	assert.AssertEq(t, err, nil)
-
-	jsonStr = fmt.Sprintf(`{"user_id": %d, "name": "Test project user", "description": "Test description"}`, testUser.ID)
-	rec, c = createContext("POST", "http://localhost:8080/project/create", jsonStr)
-	c.Request().Header.Set("Authorization", fmt.Sprintf("%s %s", res.TokenType, res.AccessToken))
-	err = mw.JwtMiddleware(mw.PermissionRequired(tDB, "create project")(HandlePostCreateProject(tDB)))(c)
+	jsonStr := fmt.Sprintf(`{"user_id": %d, "name": "Test project user", "description": "Test description"}`, testUser.ID)
+	rec, c := createContext("POST", "http://localhost:8080/project/create", jsonStr)
+	c.Request().Header.Set("Authorization", fmt.Sprintf("%s %s", authRes.TokenType, authRes.AccessToken))
+	err := mw.JwtMiddleware(mw.PermissionRequired(tDB, "create project")(HandlePostCreateProject(tDB)))(c)
 	assert.AssertEq(t, err, nil)
 	assert.AssertEq(t, rec.Code, http.StatusForbidden)
 }
 
 func TestDeleteProjectWithoutPermissionShouldFail(t *testing.T) {
-	jsonStr := fmt.Sprintf(`{"email": "%s", "password": "%s"}`, testUserIn.Email, testUserIn.Password)
+	authRes := login(t, testUserIn.Email, testUserIn.Password)
 
-	rec, c := createContext("POST", "http://localhost:8080/auth/login", jsonStr)
-	err := HandlePostLogIn(tDB)(c)
-	assert.AssertEq(t, err, nil)
-	res := schema.AuthResponse{}
-	err = json.NewDecoder(rec.Body).Decode(&res)
-	assert.AssertEq(t, err, nil)
-
-	rec, c = createContextWithParams(
+	rec, c := createContextWithParams(
 		"DELETE",
 		"http://localhost:8080/project/:id",
 		"",
 		[]string{"id"},
 		[]string{fmt.Sprintf("%d", testProject.ID)})
-	c.Request().Header.Set("Authorization", fmt.Sprintf("%s %s", res.TokenType, res.AccessToken))
-	err = mw.JwtMiddleware(mw.PermissionRequired(tDB, "delete project")(HandleDeleteProject(tDB)))(c)
+	c.Request().Header.Set("Authorization", fmt.Sprintf("%s %s", authRes.TokenType, authRes.AccessToken))
+	err := mw.JwtMiddleware(mw.PermissionRequired(tDB, "delete project")(HandleDeleteProject(tDB)))(c)
 	assert.AssertEq(t, err, nil)
 	assert.AssertEq(t, rec.Code, http.StatusForbidden)
 	r := schema.MessageResponse{}
@@ -79,23 +71,16 @@ func TestDeleteProjectWithoutPermissionShouldFail(t *testing.T) {
 }
 
 func TestDeleteProjectShouldPass(t *testing.T) {
-	jsonStr := fmt.Sprintf(`{"email": "%s", "password": "%s"}`, testAdminIn.Email, testAdminIn.Password)
+	authRes := login(t, testAdminIn.Email, testAdminIn.Password)
 
-	rec, c := createContext("POST", "http://localhost:8080/auth/login", jsonStr)
-	err := HandlePostLogIn(tDB)(c)
-	assert.AssertEq(t, err, nil)
-	res := schema.AuthResponse{}
-	err = json.NewDecoder(rec.Body).Decode(&res)
-	assert.AssertEq(t, err, nil)
-
-	rec, c = createContextWithParams(
+	rec, c := createContextWithParams(
 		"DELETE",
 		"http://localhost:8080/project/:id",
 		"",
 		[]string{"id"},
-		[]string{fmt.Sprintf("%d", testProject.ID)})
-	c.Request().Header.Set("Authorization", fmt.Sprintf("%s %s", res.TokenType, res.AccessToken))
-	err = mw.JwtMiddleware(mw.PermissionRequired(tDB, "delete project")(HandleDeleteProject(tDB)))(c)
+		[]string{fmt.Sprintf("%d", testProjectForDeletion.ID)})
+	c.Request().Header.Set("Authorization", fmt.Sprintf("%s %s", authRes.TokenType, authRes.AccessToken))
+	err := mw.JwtMiddleware(mw.PermissionRequired(tDB, "delete project")(HandleDeleteProject(tDB)))(c)
 	assert.AssertEq(t, err, nil)
 	assert.AssertEq(t, rec.Code, http.StatusNoContent)
 	r := schema.MessageResponse{}

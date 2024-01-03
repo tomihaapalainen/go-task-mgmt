@@ -1,6 +1,10 @@
 package model
 
-import "database/sql"
+import (
+	"database/sql"
+
+	"github.com/tomihaapalainen/go-task-mgmt/constants"
+)
 
 type Permission struct {
 	ID   int
@@ -9,7 +13,7 @@ type Permission struct {
 
 type Permissions []Permission
 
-func (ps *Permissions) ReadRolePermissions(db *sql.DB, roleID int) error {
+func (ps *Permissions) ReadRolePermissions(db *sql.DB, roleID constants.RoleID) error {
 	stmt, err := db.Prepare(
 		`
 		SELECT p.id, p.name

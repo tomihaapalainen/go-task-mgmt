@@ -2,10 +2,12 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/tomihaapalainen/go-task-mgmt/assert"
+	"github.com/tomihaapalainen/go-task-mgmt/constants"
 	"github.com/tomihaapalainen/go-task-mgmt/model"
 	"github.com/tomihaapalainen/go-task-mgmt/schema"
 )
@@ -23,112 +25,37 @@ func TestPostRegisterUserShouldPass(t *testing.T) {
 	err = json.NewDecoder(rec.Body).Decode(&u)
 	assert.AssertEq(t, err, nil)
 	assert.AssertNotEq(t, u.ID, 0)
-	assert.AssertEq(t, u.RoleID, 1)
+	assert.AssertEq(t, u.RoleID, constants.UserRoleID)
 	assert.AssertEq(t, u.Email, "test@example.com")
 }
 
-func TestPostRegisterUserWithoutEmailShouldFail(t *testing.T) {
-	jsonStr := `{"password": "testpassword"}`
+func TestPostRegisterShouldFail(t *testing.T) {
+	testCases := []struct {
+		requestBody string
+	}{
+		{`{"email": "", "password": "Testpass1"}`},
+		{`{"email": "testuser123@example.com", "password": ""}`},
+		{`{"email": "", "password": ""}`},
+		{`{"email": "testuser1234@example.com"}`},
+		{`{"password": "Testpass1"}`},
+		{`{"email": "testuser1234@example.com", "password": "Testpass"}`},
+		{`{"email": "testuser1234@example.com", "password": "testpas1"}`},
+		{`{"email": "testuser1234@example.com", "password": "TESTPAS1"}`},
+		{`{"email": "testuser1234@example.com", "password": "Testpa1"}`},
+		{`{}`},
+	}
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("Body: %s", tc.requestBody), func(t *testing.T) {
+			rec, c := createContext("POST", "http://localhost:8080/auth/register", tc.requestBody)
 
-	rec, c := createContext("POST", "http://localhost:8080/auth/register", jsonStr)
-
-	err := HandlePostRegister(tDB)(c)
-	assert.AssertEq(t, err, nil)
-	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
-	res := schema.MessageResponse{}
-	err = json.NewDecoder(rec.Body).Decode(&res)
-	assert.AssertEq(t, err, nil)
-}
-
-func TestPostRegisterUserWithEmptyEmailShouldFail(t *testing.T) {
-	jsonStr := `{"email": "", "password": "testpassword"}`
-
-	rec, c := createContext("POST", "http://localhost:8080/auth/register", jsonStr)
-
-	err := HandlePostRegister(tDB)(c)
-	assert.AssertEq(t, err, nil)
-	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
-	res := schema.MessageResponse{}
-	err = json.NewDecoder(rec.Body).Decode(&res)
-	assert.AssertEq(t, err, nil)
-}
-
-func TestPostRegisterUserWithoutPasswordShouldFail(t *testing.T) {
-	jsonStr := `{"email": "test@example.com"}`
-
-	rec, c := createContext("POST", "http://localhost:8080/auth/register", jsonStr)
-
-	err := HandlePostRegister(tDB)(c)
-	assert.AssertEq(t, err, nil)
-	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
-	res := schema.MessageResponse{}
-	err = json.NewDecoder(rec.Body).Decode(&res)
-	assert.AssertEq(t, err, nil)
-}
-
-func TestPostRegisterUserWithEmptyPasswordShouldFail(t *testing.T) {
-	jsonStr := `{"email": "test@example.com", "password": ""}`
-
-	rec, c := createContext("POST", "http://localhost:8080/auth/register", jsonStr)
-
-	err := HandlePostRegister(tDB)(c)
-	assert.AssertEq(t, err, nil)
-	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
-	res := schema.MessageResponse{}
-	err = json.NewDecoder(rec.Body).Decode(&res)
-	assert.AssertEq(t, err, nil)
-}
-
-func TestPostRegisterUserWithPasswordWithoutDigitShouldFail(t *testing.T) {
-	jsonStr := `{"email": "test@example.com", "password": "Testtest"}`
-
-	rec, c := createContext("POST", "http://localhost:8080/auth/register", jsonStr)
-
-	err := HandlePostRegister(tDB)(c)
-	assert.AssertEq(t, err, nil)
-	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
-	res := schema.MessageResponse{}
-	err = json.NewDecoder(rec.Body).Decode(&res)
-	assert.AssertEq(t, err, nil)
-}
-
-func TestPostRegisterUserWithPasswordWithoutUpperCaseCharacterShouldFail(t *testing.T) {
-	jsonStr := `{"email": "test@example.com", "password": "testtest1"}`
-
-	rec, c := createContext("POST", "http://localhost:8080/auth/register", jsonStr)
-
-	err := HandlePostRegister(tDB)(c)
-	assert.AssertEq(t, err, nil)
-	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
-	res := schema.MessageResponse{}
-	err = json.NewDecoder(rec.Body).Decode(&res)
-	assert.AssertEq(t, err, nil)
-}
-
-func TestPostRegisterUserWithPasswordWithoutLowerCaseCharacterShouldFail(t *testing.T) {
-	jsonStr := `{"email": "test@example.com", "password": "TESTTEST1"}`
-
-	rec, c := createContext("POST", "http://localhost:8080/auth/register", jsonStr)
-
-	err := HandlePostRegister(tDB)(c)
-	assert.AssertEq(t, err, nil)
-	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
-	res := schema.MessageResponse{}
-	err = json.NewDecoder(rec.Body).Decode(&res)
-	assert.AssertEq(t, err, nil)
-}
-
-func TestPostRegisterUserWithShortPasswordShouldFail(t *testing.T) {
-	jsonStr := `{"email": "test@example.com", "password": "Test123"}`
-
-	rec, c := createContext("POST", "http://localhost:8080/auth/register", jsonStr)
-
-	err := HandlePostRegister(tDB)(c)
-	assert.AssertEq(t, err, nil)
-	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
-	res := schema.MessageResponse{}
-	err = json.NewDecoder(rec.Body).Decode(&res)
-	assert.AssertEq(t, err, nil)
+			err := HandlePostRegister(tDB)(c)
+			assert.AssertEq(t, err, nil)
+			assert.AssertEq(t, rec.Code, http.StatusBadRequest)
+			res := schema.MessageResponse{}
+			err = json.NewDecoder(rec.Body).Decode(&res)
+			assert.AssertEq(t, err, nil)
+		})
+	}
 }
 
 func TestPostLogInWithValidCredentialsShouldPass(t *testing.T) {
