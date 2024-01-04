@@ -20,7 +20,7 @@ func HandlePostCreateTask(db *sql.DB) echo.HandlerFunc {
 
 		projectID := c.Param("projectID")
 		pID, err := strconv.Atoi(projectID)
-		if err != nil {
+		if err != nil || pID <= 0 {
 			return fmt.Errorf("invalid project ID '%s'", projectID)
 		}
 
@@ -51,12 +51,12 @@ func HandleGetTaskID(db *sql.DB) echo.HandlerFunc {
 	return echo.HandlerFunc(func(c echo.Context) error {
 		projectID := c.Param("projectID")
 		pID, err := strconv.Atoi(projectID)
-		if err != nil {
+		if err != nil || pID <= 0 {
 			return fmt.Errorf("invalid project ID '%s'", projectID)
 		}
 		taskID := c.Param("id")
 		tID, err := strconv.Atoi(taskID)
-		if err != nil {
+		if err != nil || tID <= 0 {
 			return fmt.Errorf("invalid task ID '%s'", taskID)
 		}
 
@@ -77,12 +77,12 @@ func HandleDeleteTask(db *sql.DB) echo.HandlerFunc {
 	return echo.HandlerFunc(func(c echo.Context) error {
 		projectID := c.Param("projectID")
 		pID, err := strconv.Atoi(projectID)
-		if err != nil {
+		if err != nil || pID <= 0 {
 			return fmt.Errorf("invalid project ID '%s'", projectID)
 		}
 		taskID := c.Param("id")
 		tID, err := strconv.Atoi(taskID)
-		if err != nil {
+		if err != nil || tID <= 0 {
 			return fmt.Errorf("invalid project ID '%s'", taskID)
 		}
 

@@ -110,3 +110,27 @@ func TestReadProjectShouldPass(t *testing.T) {
 	assert.AssertEq(t, p.Description, testProject.Description)
 	assert.AssertEq(t, p.UserID, testProject.UserID)
 }
+
+func TestPatchProjectShouldPass(t *testing.T) {
+	authRes := login(t, testProjectManagerIn.Email, testProjectManagerIn.Password)
+
+	jsonStr := `{"name": "Updated project name", "description": "Updated project description"}`
+	rec, c := createContextWithParams(
+		"PATCH",
+		"http://localhost:8080/project/:id",
+		jsonStr,
+		[]string{"id"},
+		[]string{fmt.Sprintf("%d", testProject.ID)},
+	)
+	c.Request().Header.Set("Authorization", fmt.Sprintf("%s %s", authRes.TokenType, authRes.AccessToken))
+	err := mw.JwtMiddleware(mw.PermissionRequired(tDB, "update project")(HandlePatchProjectID(tDB)))(c)
+	assert.AssertEq(t, err, nil)
+	assert.AssertEq(t, rec.Code, http.StatusOK)
+	p := model.Project{}
+	err = json.NewDecoder(rec.Body).Decode(&p)
+	assert.AssertEq(t, err, nil)
+	assert.AssertEq(t, p.ID, testProject.ID)
+	assert.AssertNotEq(t, p.Name, testProject.Name)
+	assert.AssertNotEq(t, p.Description, testProject.Description)
+	assert.AssertEq(t, p.UserID, testProject.UserID)
+}

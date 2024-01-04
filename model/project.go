@@ -37,6 +37,22 @@ func (p *Project) ReadByID(db *sql.DB) error {
 	return stmt.QueryRow(p.ID).Scan(&p.UserID, &p.Name, &p.Description)
 }
 
+func (p *Project) Update(db *sql.DB) error {
+	stmt, err := db.Prepare(
+		`
+		UPDATE project
+		SET name = $1,
+			description = $2
+		WHERE id = $3
+		RETURNING user_id, name, description
+		`,
+	)
+	if err != nil {
+		return err
+	}
+	return stmt.QueryRow(p.Name, p.Description, p.ID).Scan(&p.UserID, &p.Name, &p.Description)
+}
+
 func (p *Project) Delete(db *sql.DB) error {
 	stmt, err := db.Prepare(
 		`
