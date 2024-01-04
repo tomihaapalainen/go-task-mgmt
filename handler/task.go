@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/tomihaapalainen/go-task-mgmt/model"
@@ -28,6 +29,16 @@ func HandlePostCreateTask(db *sql.DB) echo.HandlerFunc {
 		if err := json.NewDecoder(c.Request().Body).Decode(&taskIn); err != nil {
 			log.Println("err decoding body: ", err)
 			return c.JSON(http.StatusBadRequest, schema.MessageResponse{Message: "invalid request body"})
+		}
+
+		taskIn.Title = strings.TrimSpace(taskIn.Title)
+		if taskIn.Title == "" {
+			return c.JSON(http.StatusBadRequest, schema.MessageResponse{Message: "task title must not be empty"})
+		}
+
+		taskIn.Content = strings.TrimSpace(taskIn.Content)
+		if taskIn.Content == "" {
+			return c.JSON(http.StatusBadRequest, schema.MessageResponse{Message: "task content"})
 		}
 
 		task := model.Task{
@@ -70,6 +81,45 @@ func HandleGetTaskID(db *sql.DB) echo.HandlerFunc {
 			http.StatusOK,
 			task,
 		)
+	})
+}
+
+func HandlePatchTaskID(db *sql.DB) echo.HandlerFunc {
+	return echo.HandlerFunc(func(c echo.Context) error {
+		projectID := c.Param("projectID")
+		pID, err := strconv.Atoi(projectID)
+		if err != nil || pID <= 0 {
+			return fmt.Errorf("invalid project ID '%s'", projectID)
+		}
+		taskID := c.Param("id")
+		tID, err := strconv.Atoi(taskID)
+		if err != nil || tID <= 0 {
+			return fmt.Errorf("invalid project ID '%s'", taskID)
+		}
+
+		task := model.Task{}
+		if err := json.NewDecoder(c.Request().Body).Decode(&task); err != nil {
+			log.Println("err decoding request body: ", err)
+			return c.JSON(http.StatusBadRequest, schema.MessageResponse{Message: "invalid request body"})
+		}
+
+		task.Title = strings.TrimSpace(task.Title)
+		if task.Title == "" {
+			return c.JSON(http.StatusBadRequest, schema.MessageResponse{Message: "task title must not be empty"})
+		}
+
+		task.Content = strings.TrimSpace(task.Content)
+		if task.Content == "" {
+			return c.JSON(http.StatusBadRequest, schema.MessageResponse{Message: "task content"})
+		}
+
+		task.ProjectID = pID
+		task.ID = tID
+		if err := task.Update(db); err != nil {
+			log.Println("err updating project: ", err)
+			return c.JSON(http.StatusInternalServerError, schema.MessageResponse{Message: "error updating task"})
+		}
+		return c.JSON(http.StatusOK, task)
 	})
 }
 

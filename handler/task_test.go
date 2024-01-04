@@ -95,3 +95,23 @@ func TestReadTaskShouldPass(t *testing.T) {
 	assert.AssertEq(t, task.Content, testTask.Content)
 	assert.AssertEq(t, task.Status, testTask.Status)
 }
+
+func TestPatchTaskShouldPass(t *testing.T) {
+	authRes := login(t, testUserIn.Email, testUserIn.Password)
+
+	jsonStr := fmt.Sprintf(
+		`{"assignee_id": %d, "title": "Updated task title", "content": "Updated task content", "status": "doing"}`,
+		testTask.AssigneeID,
+	)
+	rec, c := createContextWithParams(
+		"PATCH",
+		"http://localhost:8080/project/:projectID/task/:id",
+		jsonStr,
+		[]string{"projectID", "id"},
+		[]string{fmt.Sprintf("%d", testProject.ID), fmt.Sprintf("%d", testTask.ID)},
+	)
+	c.Request().Header.Set("Authorization", fmt.Sprintf("%s %s", authRes.TokenType, authRes.AccessToken))
+	err := mw.JwtMiddleware(mw.PermissionRequired(tDB, "update task")(HandlePatchTaskID(tDB)))(c)
+	assert.AssertEq(t, err, nil)
+	assert.AssertEq(t, rec.Code, http.StatusOK)
+}

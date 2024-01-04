@@ -52,6 +52,7 @@ func main() {
 	taskGroup := projectGroup.Group("/:projectID")
 	taskGroup.POST("/task/create", handler.HandlePostCreateTask(db), mw.PermissionRequired(db, "create task"))
 	taskGroup.GET("/task/:id", handler.HandleGetTaskID(db), mw.PermissionRequired(db, "read task"))
+	taskGroup.PATCH("/task/:id", handler.HandlePatchTaskID(db), mw.PermissionRequired(db, "update task"))
 	taskGroup.POST("/task/:id", handler.HandleDeleteTask(db), mw.PermissionRequired(db, "delete task"))
 
 	e.Start(config.PORT)

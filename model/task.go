@@ -7,13 +7,13 @@ import (
 )
 
 type Task struct {
-	ID         int
-	ProjectID  int
-	AssigneeID int
-	CreatorID  int
-	Title      string
-	Content    string
-	Status     constants.TaskStatus
+	ID         int                  `json:"id"`
+	ProjectID  int                  `json:"project_id"`
+	AssigneeID int                  `json:"assignee_id"`
+	CreatorID  int                  `json:"creator_id"`
+	Title      string               `json:"title"`
+	Content    string               `json:"content"`
+	Status     constants.TaskStatus `json:"status"`
 }
 
 func (t *Task) Create(db *sql.DB) error {
@@ -44,6 +44,39 @@ func (t *Task) ReadByID(db *sql.DB) error {
 		return err
 	}
 	return stmt.QueryRow(t.ID, t.ProjectID).Scan(&t.AssigneeID, &t.CreatorID, &t.Title, &t.Content, &t.Status)
+}
+
+func (t *Task) Update(db *sql.DB) error {
+	stmt, err := db.Prepare(
+		`
+		UPDATE task
+		SET project_id = $1,
+			assignee_id = $2,
+			title = $3,
+			content = $4,
+			status = $5
+		WHERE id = $6 AND project_id = $7
+		RETURNING project_id, assignee_id, creator_id, title, content, status
+		`,
+	)
+	if err != nil {
+		return err
+	}
+	return stmt.QueryRow(
+		t.ProjectID,
+		t.AssigneeID,
+		t.Title,
+		t.Content,
+		t.Title,
+		t.ID,
+		t.ProjectID,
+	).Scan(&t.ProjectID,
+		&t.AssigneeID,
+		&t.CreatorID,
+		&t.Title,
+		&t.Content,
+		&t.Status,
+	)
 }
 
 func (t *Task) Delete(db *sql.DB) error {
