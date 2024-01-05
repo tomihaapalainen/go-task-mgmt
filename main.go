@@ -19,13 +19,7 @@ func main() {
 
 	env := flag.String("env", "dev", "run environment dev|test|prod")
 	port := flag.String("port", ":8080", "application port, e.g. ':8080'")
-	if env == nil {
-		log.Fatal("env flag was nil")
 
-	}
-	if port == nil {
-		log.Fatal("port flag was nil")
-	}
 	config.ENV = *env
 	config.PORT = *port
 

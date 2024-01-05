@@ -33,13 +33,13 @@ func HandlePostCreateProject(db *sql.DB) echo.HandlerFunc {
 
 		project.Name = strings.TrimSpace(project.Name)
 		if project.Name == "" {
-			log.Println("invalid project name ", project.Name)
+			log.Println("invalid project name", project.Name)
 			return c.JSON(http.StatusBadRequest, schema.MessageResponse{Message: "project name must not be empty"})
 		}
 		project.Description = strings.TrimSpace(project.Description)
 
 		if err := project.Create(db); err != nil {
-			log.Println("err creating project: ", err)
+			log.Println("err creating project:", err)
 			return errors.New("unable to create project")
 		}
 
