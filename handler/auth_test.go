@@ -1,14 +1,18 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"github.com/labstack/echo/v4"
 	"github.com/tomihaapalainen/go-task-mgmt/assert"
 	"github.com/tomihaapalainen/go-task-mgmt/constants"
 	"github.com/tomihaapalainen/go-task-mgmt/model"
+	"github.com/tomihaapalainen/go-task-mgmt/mw"
 	"github.com/tomihaapalainen/go-task-mgmt/schema"
 )
 
@@ -74,4 +78,17 @@ func TestPostLogInWithValidCredentialsShouldPass(t *testing.T) {
 	authResponse := schema.AuthResponse{}
 	err = json.NewDecoder(rec.Body).Decode(&authResponse)
 	assert.AssertEq(t, err, nil)
+}
+
+func TestPostLoginWithInvalidContentTypeShouldFail(t *testing.T) {
+	jsonStr := `{"email": "testauth@example.com", "password": "Testpassword1"}`
+	req := httptest.NewRequest("POST", "http://localhost:8080/auth/register", bytes.NewBuffer([]byte(jsonStr)))
+
+	rec := httptest.NewRecorder()
+	e := echo.New()
+	c := e.NewContext(req, rec)
+
+	err := mw.ContentApplicationJSONOnly(HandlePostLogIn(tDB))(c)
+	assert.AssertEq(t, err, nil)
+	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
 }

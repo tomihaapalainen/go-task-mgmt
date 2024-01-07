@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/tomihaapalainen/go-task-mgmt/config"
 	"github.com/tomihaapalainen/go-task-mgmt/dotenv"
 	"github.com/tomihaapalainen/go-task-mgmt/handler"
@@ -29,6 +30,14 @@ func main() {
 	}
 
 	e := echo.New()
+
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost"},
+		AllowHeaders: []string{"Accept", "Content-Type", "Origin"},
+		AllowMethods: []string{"DELETE", "GET", "OPTIONS", "PATCH", "POST"},
+	}))
+
+	e.Use(mw.ContentApplicationJSONOnly)
 
 	authGroup := e.Group("/auth")
 	authGroup.POST("/register", handler.HandlePostRegister(db))
