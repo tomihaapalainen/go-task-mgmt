@@ -8,7 +8,7 @@ import (
 	"github.com/tomihaapalainen/go-task-mgmt/schema"
 )
 
-func ContentApplicationJSONOnly(next echo.HandlerFunc) echo.HandlerFunc {
+func ContentTypeApplicationJSONOnly(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		contentType := c.Request().Header.Get("Content-Type")
 		if contentType != "application/json" {

@@ -88,7 +88,7 @@ func TestPostLoginWithInvalidContentTypeShouldFail(t *testing.T) {
 	e := echo.New()
 	c := e.NewContext(req, rec)
 
-	err := mw.ContentApplicationJSONOnly(HandlePostLogIn(tDB))(c)
+	err := mw.ContentTypeApplicationJSONOnly(HandlePostLogIn(tDB))(c)
 	assert.AssertEq(t, err, nil)
 	assert.AssertEq(t, rec.Code, http.StatusBadRequest)
 }

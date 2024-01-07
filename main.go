@@ -37,7 +37,7 @@ func main() {
 		AllowMethods: []string{"DELETE", "GET", "OPTIONS", "PATCH", "POST"},
 	}))
 
-	e.Use(mw.ContentApplicationJSONOnly)
+	e.Use(mw.ContentTypeApplicationJSONOnly)
 
 	authGroup := e.Group("/auth")
 	authGroup.POST("/register", handler.HandlePostRegister(db))
